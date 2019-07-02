@@ -9,8 +9,8 @@
     @click-right="post"
     />
     <div>
-      <input placeholder="标题" v-model="title" class="postTitle"><br>
-      <textarea placeholder="内容" v-model="content" class="postContent"></textarea>
+      <input placeholder="标题" v-model="title" class="newpost-title"><br>
+      <textarea placeholder="内容" v-model="content" class="newpost-content"></textarea>
     </div>
     <van-field
       readonly
@@ -31,7 +31,7 @@
     </van-popup>
 
     <div>
-      
+
     </div>
   </div>
 </template>
@@ -97,22 +97,19 @@ export default {
 </script>
 
 <style>
-.postContent{
+.newpost-title{
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 15px;
   border: none;
-  border-bottom: 2px solid #888;
-  width: 100vw;
-  padding: 10px;
+  border-bottom: 1px solid #aaa;
+}
+.newpost-content{
+  box-sizing: border-box;
+  width: 100%;
   height: 350px;
-  margin: 5px 0;
-
-}
-.postTitle{
+  padding: 15px;
   border: none;
-  border-bottom: 2px solid #888;
-  width: 100vw;
-  padding: 10px;
-}
-.postImg{
-margin: 10px;
+  border-bottom: 1px solid #aaa;
 }
 </style>

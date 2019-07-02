@@ -1,91 +1,146 @@
 <template>
   <div>
-    <div :hidden="$store.state.hid"  class="user">
-      <van-nav-bar
-        left-text="返回"
-        left-arrow
-        @click-left="back"
-      />
-      <van-cell class="userDiy" is-link to="index" v-if="$store.state.login">
-        <img src="https://img.yzcdn.cn/vant/cat.jpeg" class="avatar">
-        <div class="userName">
-            {{$store.state.username}}
+    <van-nav-bar left-text="返回" left-arrow @click-left="back"/>
+    <div class="name">{{username}}</div>
+    <van-tabs v-model="active">
+      <van-tab title="帖子">
+        <div v-for="post in posts" :key="post.id" class="user-post">
+          <router-link :to="'/post/'+post.id">{{post.title}}</router-link><br>
+          <small>{{post.created_at}}</small>
         </div>
-        <template slot="right-icon">
-          <span class="gg"><van-icon name="arrow" /></span>
-        </template>
-      </van-cell>
-      <div v-else class="login">
-            <span @click="toRegister">注册</span>/
-            <span @click="toLogin">登录</span>
+      </van-tab>
+      <van-tab title="评论">
+        <div>
+          <div v-if="comments.length>0">
+            <!-- <div v-for="comment in comments" :key="comment.id"  class="user-comment">
+              <span>{{comment.user.username}}</span>
+              <p>
+                <strong>{{comment.content}}</strong>
+              </p>
+              <small>{{comment.updated_at}}</small>
+            </div>
+          </div>
+          <div v-else>
+            <span class="no-comment">暂无评论</span>
+          </div> -->
+          <div v-for="(comment,index) in comments" :key="index" class="post-comment">
+            <img src="/assets/user.jpg" class="post-avatar">
+          <div class="comment-box">
+            <router-link :to="'/user/'+comment.user.id" class="post-username">{{comment.user.username}}</router-link>
+            <p class="post-comment-content">{{comment.content}}</p>
+            <small>{{comment.updated_at | dateFmt}}</small>
+          </div>
+          <span v-if="!comment.liked">
+            <img src="/assets/dianzan1.png" class="awesome" @click="numberplus(comment)">
+          </span>
+          <span v-else>
+            <img src="/assets/dianzan2.png" class="awesome" @click="numberReduce(comment)">
+          </span>
+          {{number}}
+        </div>
       </div>
-
-      <div class="userMessage">
-        <van-cell  value="个人主页" is-link to="/" />
-        <van-cell  value="我的帖子" is-link to="/" />
-        <van-cell  value="我的评论" is-link to="/" />
+      <div v-else  class="post-nocomment">
+        暂无评论
       </div>
-      <div class="userMessage">
-        <van-cell  value="系统通知" is-link to="/" />
-        <van-cell  value="评论" is-link to="/" />
-        <van-cell  value="私信" is-link to="/" />
+            <div>
+        <van-pagination
+          v-model = "currentPage"
+          :total-items = "total"
+          :items-per-page = "15"
+          :show-page-size="3"
+          force-ellipses
+          @change="nextPage"
+        />
       </div>
-    </div>
-    <router-view></router-view>
+        </div>
+      </van-tab>
+    </van-tabs>
   </div>
-
 </template>
 
 <script>
 export default {
-methods:{
-    toRegister(){
-      this.$router.push('/register');
-      this.$store.commit('hidden');
+  data() {
+    return {
+      username: "",
+      active: 2,
+      posts: [],
+      comments: [],
+      number: 0,
+      awesome:true,
+      total: 0,
+      currentPage: 1
+    };
+  },
+  methods: {
+    getUser() {
+      let id = this.$route.params.id;
+      this.$http.get(`users/${id}`).then(resp => {
+        this.username = resp.data.username;
+      });
     },
-    toLogin(){
-      this.$router.push('/login');
-      this.$store.commit('hidden')
+    getPost() {
+      let id = this.$route.params.id;
+      this.$http.get(`threads?user_id=${id}`).then(resp => {
+        this.posts = resp.data.data;
+      });
     },
-    back(){
-      this.$router.go('-1')
+    getComment() {
+      let id = this.$route.params.id;
+      this.$http.get(`comments?user_id=${id}`).then(resp => {
+        // console.log(resp)
+        this.total = resp.data.total;
+        this.comments = resp.data.data;
+          for (let i = 0; i < this.comments.length; i++) {
+          this.comments[i].liked = false;
+        }
+      });
     },
-}
-}
+    numberplus(comment){
+      comment.liked = true;
+      this.number++;
+    },
+    numberReduce(comment){
+      comment.liked = false;
+      this.number--;
+    },
+    nextPage(){
+      let page = this.currentPage;
+      let id = this.$route.params.id;
+      this.$http.get(`comments?user_id=${id}&page=${page}`)
+      .then(resp=>{
+        this.comments=resp.data.data
+      })
+    },
+    back() {
+      this.$router.go("-1");
+    },
+  },
+  created() {
+    this.getUser();
+    this.getPost();
+    this.getComment();
+  }
+};
 </script>
 
 <style>
-.user{
-  text-align: center
-}
-.avatar{
-  width: 80px;
+.name{
+  width: 100vw;
   height: 80px;
-  margin: 5px 20px 0 0;
-  border-radius: 50px;
-  float: left;
-}
-.userName{
-  margin: 10px 0;
-  /* float: left; */
+  font-size: 20px;
   display: flex;
   align-items: center;
-}
-.userMessage{
-  border-top:10px solid #ddd
-}
-.login{
-  width: 100%;
-  height: 80px;
-  display: flex;
   justify-content: center;
-  align-items: center;
-  /* background:		#00BFFF; */
+  background: #ffdd55
 }
-.gg {
-  position: relative;
-  top: 30px;
-  /* justify-content: center; */
-  /* align-items: center; */
+.user-post{
+  width: 100vw;
+  height: 50px;
+  margin: 5px;
+}
+.user-comment{
+  margin:10px 10px;
+  word-break: break-all;
 }
 </style>
